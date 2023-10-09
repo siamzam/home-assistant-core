@@ -8,6 +8,9 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import Unauthorized
 
+STR_USER_NOT_FOUND = "User not found"
+STR_CRED_NOT_FOUND = "Credentials not found"
+
 
 async def async_setup(hass):
     """Enable the Home Assistant views."""
@@ -37,7 +40,7 @@ async def websocket_create(
     provider = auth_ha.async_get_provider(hass)
 
     if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
-        connection.send_error(msg["id"], "not_found", "User not found")
+        connection.send_error(msg["id"], "not_found", STR_USER_NOT_FOUND)
         return
 
     if user.system_generated:
@@ -115,7 +118,7 @@ async def websocket_change_password(
 ) -> None:
     """Change current user password."""
     if (user := connection.user) is None:
-        connection.send_error(msg["id"], "user_not_found", "User not found")
+        connection.send_error(msg["id"], "user_not_found", STR_USER_NOT_FOUND)
         return
 
     provider = auth_ha.async_get_provider(hass)
@@ -126,9 +129,7 @@ async def websocket_change_password(
             break
 
     if username is None:
-        connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
-        )
+        connection.send_error(msg["id"], "credentials_not_found", STR_CRED_NOT_FOUND)
         return
 
     try:
@@ -165,7 +166,7 @@ async def websocket_admin_change_password(
         raise Unauthorized(context=connection.context(msg))
 
     if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
-        connection.send_error(msg["id"], "user_not_found", "User not found")
+        connection.send_error(msg["id"], "user_not_found", STR_USER_NOT_FOUND)
         return
 
     provider = auth_ha.async_get_provider(hass)
@@ -177,16 +178,12 @@ async def websocket_admin_change_password(
             break
 
     if username is None:
-        connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
-        )
+        connection.send_error(msg["id"], "credentials_not_found", STR_CRED_NOT_FOUND)
         return
 
     try:
         await provider.async_change_password(username, msg["password"])
         connection.send_result(msg["id"])
     except auth_ha.InvalidUser:
-        connection.send_error(
-            msg["id"], "credentials_not_found", "Credentials not found"
-        )
+        connection.send_error(msg["id"], "credentials_not_found", STR_CRED_NOT_FOUND)
         return
