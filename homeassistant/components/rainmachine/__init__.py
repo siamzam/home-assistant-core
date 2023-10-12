@@ -222,12 +222,7 @@ async def async_setup_entry(  # noqa: C901
     ip_address = entry.data[CONF_IP_ADDRESS]
 
     try:
-        await client.load_local(
-            ip_address,
-            entry.data[CONF_PASSWORD],
-            port=entry.data[CONF_PORT],
-            use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
-        )
+        await load_rainmachine_client(client, ip_address, entry)
     except RainMachineError as err:
         raise ConfigEntryNotReady from err
 
@@ -236,54 +231,20 @@ async def async_setup_entry(  # noqa: C901
     controller = get_client_controller(client)
 
     entry_updates: dict[str, Any] = {}
-    if not entry.unique_id or is_ip_address(entry.unique_id):
-        # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = controller.mac
+    update_controller_unique_id(entry, controller, entry_updates)
+    move_zone_run_time_to_options(entry, entry_updates)
 
-    if CONF_DEFAULT_ZONE_RUN_TIME in entry.data:
-        # If a zone run time exists in the config entry's data, pop it and move it to
-        # options:
-        data = {**entry.data}
-        entry_updates["data"] = data
-        entry_updates["options"] = {
-            **entry.options,
-            CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
-        }
-    if CONF_USE_APP_RUN_TIMES not in entry.options:
-        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
     if entry_updates:
-        hass.config_entries.async_update_entry(entry, **entry_updates)
+        update_config_entry(hass, entry, entry_updates)
 
-    if entry.unique_id and controller.mac != entry.unique_id:
-        # If the mac address of the device does not match the unique_id
-        # of the config entry, it likely means the DHCP lease has expired
-        # and the device has been assigned a new IP address. We need to
-        # wait for the next discovery to find the device at its new address
-        # and update the config entry so we do not mix up devices.
-        raise ConfigEntryNotReady(
-            f"Unexpected device found at {ip_address}; expected {entry.unique_id}, "
-            f"found {controller.mac}"
-        )
+    check_unexpected_device_discovery(hass, entry, controller, ip_address)
 
     async def async_update(api_category: str) -> dict:
         """Update the appropriate API data based on a category."""
         data: dict = {}
 
         try:
-            if api_category == DATA_API_VERSIONS:
-                data = await controller.api.versions()
-            elif api_category == DATA_MACHINE_FIRMWARE_UPDATE_STATUS:
-                data = await controller.machine.get_firmware_update_status()
-            elif api_category == DATA_PROGRAMS:
-                data = await controller.programs.all(include_inactive=True)
-            elif api_category == DATA_PROVISION_SETTINGS:
-                data = await controller.provisioning.settings()
-            elif api_category == DATA_RESTRICTIONS_CURRENT:
-                data = await controller.restrictions.current()
-            elif api_category == DATA_RESTRICTIONS_UNIVERSAL:
-                data = await controller.restrictions.universal()
-            else:
-                data = await controller.zones.all(details=True, include_inactive=True)
+            data = await execute_api_call(controller, api_category)
         except UnknownAPICallError:
             LOGGER.info(
                 "Skipping unsupported API call for controller %s: %s",
@@ -454,6 +415,169 @@ async def async_setup_entry(  # noqa: C901
         hass.services.async_register(DOMAIN, service_name, method, schema=schema)
 
     return True
+
+
+async def load_rainmachine_client(
+    client: Client,
+    ip_address: str,
+    entry: ConfigEntry,
+) -> None:
+    """Load the RainMachine client with the specified IP address and configuration.
+
+    This function initializes the RainMachine client with the provided IP address and
+    configuration data from the given ConfigEntry.
+
+    Args:
+        client (Client): The RainMachine client instance.
+        ip_address (str): The IP address of the RainMachine device.
+        entry (ConfigEntry): The configuration entry with RainMachine settings.
+
+    Returns:
+    None
+    """
+    await client.load_local(
+        ip_address,
+        entry.data[CONF_PASSWORD],
+        port=entry.data[CONF_PORT],
+        use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
+    )
+
+
+def update_controller_unique_id(
+    entry: ConfigEntry, controller: Controller, entry_updates: dict[str, Any]
+) -> None:
+    """Update the unique ID of a RainMachine controller in a configuration entry.
+
+    This function checks if the provided configuration entry already has a unique ID.
+    If it does not, it sets the unique ID to the MAC address of the RainMachine controller.
+
+    Args:
+        entry (ConfigEntry): The configuration entry to be updated.
+        controller (Controller): The RainMachine controller.
+        entry_updates (dict): A dictionary containing the updates to be applied to the entry.
+
+    Returns:
+        None
+    """
+    if not entry.unique_id or is_ip_address(entry.unique_id):
+        # If the config entry doesn't already have a unique ID, set one:
+        entry_updates["unique_id"] = controller.mac
+
+
+def move_zone_run_time_to_options(
+    entry: ConfigEntry, entry_updates: dict[str, Any]
+) -> None:
+    """Move zone run time from the config entry's data to its options.
+
+    This function checks if the configuration entry contains a zone run time in its data.
+    If a zone run time exists, it is moved from the data dictionary to the options dictionary.
+    If the `CONF_USE_APP_RUN_TIMES` option is not already set in the options, it is added and set to `False`.
+
+    Args:
+        entry (ConfigEntry): The configuration entry to be updated.
+        entry_updates (dict): A dictionary containing the updates to be applied to the entry.
+
+    Returns:
+        None
+    """
+    if CONF_DEFAULT_ZONE_RUN_TIME in entry.data:
+        # If a zone run time exists in the config entry's data, pop it and move it to options:
+        data = {**entry.data}
+        entry_updates["data"] = data
+        entry_updates["options"] = {
+            **entry.options,
+            CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
+        }
+
+    if CONF_USE_APP_RUN_TIMES not in entry.options:
+        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
+
+
+def update_config_entry(
+    hass: HomeAssistant, entry: ConfigEntry, entry_updates: dict[str, Any]
+) -> None:
+    """Update a Home Assistant configuration entry with the provided updates."""
+    hass.config_entries.async_update_entry(entry, **entry_updates)
+
+
+def check_unexpected_device_discovery(
+    hass: HomeAssistant, entry: ConfigEntry, controller: Controller, ip_address: str
+) -> None:
+    """Check for unexpected device discovery and raise an exception if needed.
+
+    This function compares the MAC address of the discovered device with the
+    unique ID of the configuration entry. If they don't match, it raises a
+    ConfigEntryNotReady exception to handle the situation.
+    """
+    if entry.unique_id and controller.mac != entry.unique_id:
+        # If the mac address of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {ip_address}; expected {entry.unique_id}, "
+            f"found {controller.mac}"
+        )
+
+
+async def execute_service_with_error_handling(
+    call: ServiceCall,
+    data: Any,
+    func: Callable[[ServiceCall, Controller], Awaitable[None]],
+) -> None:
+    """Execute a RainMachine service with error handling.
+
+    This function executes a RainMachine service while handling any potential
+    RainMachine-specific errors. It calls the provided service function, `func`,
+    with the service call and the RainMachine controller's data. If an error occurs,
+    it raises a HomeAssistantError with an informative message.
+
+    Args:
+        call (ServiceCall): The service call.
+        data (Any): RainMachine controller data.
+        func (Callable[[ServiceCall, Controller], Awaitable[None]]): The service function to execute.
+
+    Raises:
+        HomeAssistantError: If an error occurs during the service execution.
+
+    """
+    try:
+        await func(call, data.controller)
+    except RainMachineError as err:
+        raise HomeAssistantError(
+            f"Error while executing {func.__name__}: {err}"
+        ) from err
+
+
+async def execute_api_call(controller: Controller, api_category: str) -> dict:
+    """Execute a RainMachine API call based on the provided category.
+
+    This function executes the appropriate RainMachine API call based on the
+    given category and returns the resulting data.
+
+    Args:
+        controller (Controller): The RainMachine controller to use for the API call.
+        api_category (str): The category of the API call.
+
+    Returns:
+        dict: The data returned by the API call.
+
+    """
+    if api_category == DATA_API_VERSIONS:
+        return await controller.api.versions()
+    if api_category == DATA_MACHINE_FIRMWARE_UPDATE_STATUS:
+        return await controller.machine.get_firmware_update_status()
+    if api_category == DATA_PROGRAMS:
+        return await controller.programs.all(include_inactive=True)
+    if api_category == DATA_PROVISION_SETTINGS:
+        return await controller.provisioning.settings()
+    if api_category == DATA_RESTRICTIONS_CURRENT:
+        return await controller.restrictions.current()
+    if api_category == DATA_RESTRICTIONS_UNIVERSAL:
+        return await controller.restrictions.universal()
+
+    return await controller.zones.all(details=True, include_inactive=True)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
