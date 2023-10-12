@@ -25,6 +25,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, APCUPSdData
 
+STRING_INFORMATION_OUTLINE = "mdi:information-outline"
+STRING_CALANDAR_CLOCK = "mdi:calendar-clock"
+STRING_TIMER_OUTLINE = "mdi:timer-outline"
+STRING_TRANSFER = "mdi:transfer"
+
+
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -44,29 +50,29 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "apc": SensorEntityDescription(
         key="apc",
         name="UPS Status Data",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "apcmodel": SensorEntityDescription(
         key="apcmodel",
         name="UPS Model",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "badbatts": SensorEntityDescription(
         key="badbatts",
         name="UPS Bad Batteries",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "battdate": SensorEntityDescription(
         key="battdate",
         name="UPS Battery Replaced",
-        icon="mdi:calendar-clock",
+        icon=STRING_CALANDAR_CLOCK,
     ),
     "battstat": SensorEntityDescription(
         key="battstat",
         name="UPS Battery Status",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "battv": SensorEntityDescription(
         key="battv",
@@ -92,19 +98,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "cumonbatt": SensorEntityDescription(
         key="cumonbatt",
         name="UPS Total Time on Battery",
-        icon="mdi:timer-outline",
+        icon=STRING_TIMER_OUTLINE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "date": SensorEntityDescription(
         key="date",
         name="UPS Status Date",
-        icon="mdi:calendar-clock",
+        icon=STRING_CALANDAR_CLOCK,
         entity_registry_enabled_default=False,
     ),
     "dipsw": SensorEntityDescription(
         key="dipsw",
         name="UPS Dip Switch Settings",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "dlowbatt": SensorEntityDescription(
         key="dlowbatt",
@@ -114,34 +120,34 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "driver": SensorEntityDescription(
         key="driver",
         name="UPS Driver",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "dshutd": SensorEntityDescription(
         key="dshutd",
         name="UPS Shutdown Delay",
-        icon="mdi:timer-outline",
+        icon=STRING_TIMER_OUTLINE,
     ),
     "dwake": SensorEntityDescription(
         key="dwake",
         name="UPS Wake Delay",
-        icon="mdi:timer-outline",
+        icon=STRING_TIMER_OUTLINE,
     ),
     "end apc": SensorEntityDescription(
         key="end apc",
         name="UPS Date and Time",
-        icon="mdi:calendar-clock",
+        icon=STRING_CALANDAR_CLOCK,
         entity_registry_enabled_default=False,
     ),
     "extbatts": SensorEntityDescription(
         key="extbatts",
         name="UPS External Batteries",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "firmware": SensorEntityDescription(
         key="firmware",
         name="UPS Firmware Version",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "hitrans": SensorEntityDescription(
@@ -153,7 +159,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "hostname": SensorEntityDescription(
         key="hostname",
         name="UPS Hostname",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "humidity": SensorEntityDescription(
@@ -174,18 +180,18 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "laststest": SensorEntityDescription(
         key="laststest",
         name="UPS Last Self Test",
-        icon="mdi:calendar-clock",
+        icon=STRING_CALANDAR_CLOCK,
     ),
     "lastxfer": SensorEntityDescription(
         key="lastxfer",
         name="UPS Last Transfer",
-        icon="mdi:transfer",
+        icon=STRING_TRANSFER,
         entity_registry_enabled_default=False,
     ),
     "linefail": SensorEntityDescription(
         key="linefail",
         name="UPS Input Voltage Status",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "linefreq": SensorEntityDescription(
         key="linefreq",
@@ -229,7 +235,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "masterupd": SensorEntityDescription(
         key="masterupd",
         name="UPS Master Update",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "maxlinev": SensorEntityDescription(
         key="maxlinev",
@@ -257,12 +263,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "mintimel": SensorEntityDescription(
         key="mintimel",
         name="UPS Shutdown Time",
-        icon="mdi:timer-outline",
+        icon=STRING_TIMER_OUTLINE,
     ),
     "model": SensorEntityDescription(
         key="model",
         name="UPS Model",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "nombattv": SensorEntityDescription(
@@ -318,19 +324,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "reg1": SensorEntityDescription(
         key="reg1",
         name="UPS Register 1 Fault",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "reg2": SensorEntityDescription(
         key="reg2",
         name="UPS Register 2 Fault",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "reg3": SensorEntityDescription(
         key="reg3",
         name="UPS Register 3 Fault",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "retpct": SensorEntityDescription(
@@ -342,40 +348,40 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "selftest": SensorEntityDescription(
         key="selftest",
         name="UPS Self Test result",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "sense": SensorEntityDescription(
         key="sense",
         name="UPS Sensitivity",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "serialno": SensorEntityDescription(
         key="serialno",
         name="UPS Serial Number",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "starttime": SensorEntityDescription(
         key="starttime",
         name="UPS Startup Time",
-        icon="mdi:calendar-clock",
+        icon=STRING_CALANDAR_CLOCK,
     ),
     "statflag": SensorEntityDescription(
         key="statflag",
         name="UPS Status Flag",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "status": SensorEntityDescription(
         key="status",
         name="UPS Status",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "stesti": SensorEntityDescription(
         key="stesti",
         name="UPS Self Test Interval",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
@@ -386,40 +392,40 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "tonbatt": SensorEntityDescription(
         key="tonbatt",
         name="UPS Time on Battery",
-        icon="mdi:timer-outline",
+        icon=STRING_TIMER_OUTLINE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "upsmode": SensorEntityDescription(
         key="upsmode",
         name="UPS Mode",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
     ),
     "upsname": SensorEntityDescription(
         key="upsname",
         name="UPS Name",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "version": SensorEntityDescription(
         key="version",
         name="UPS Daemon Info",
-        icon="mdi:information-outline",
+        icon=STRING_INFORMATION_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     "xoffbat": SensorEntityDescription(
         key="xoffbat",
         name="UPS Transfer from Battery",
-        icon="mdi:transfer",
+        icon=STRING_TRANSFER,
     ),
     "xoffbatt": SensorEntityDescription(
         key="xoffbatt",
         name="UPS Transfer from Battery",
-        icon="mdi:transfer",
+        icon=STRING_TRANSFER,
     ),
     "xonbatt": SensorEntityDescription(
         key="xonbatt",
         name="UPS Transfer to Battery",
-        icon="mdi:transfer",
+        icon=STRING_TRANSFER,
     ),
 }
 
