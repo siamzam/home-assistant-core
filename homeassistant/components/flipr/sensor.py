@@ -15,18 +15,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .entity import FliprEntity
 
+MDI_POOL = "mdi:pool"
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="chlorine",
         translation_key="chlorine",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
+        icon=MDI_POOL,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
         translation_key="ph",
-        icon="mdi:pool",
+        icon=MDI_POOL,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -45,7 +47,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="red_ox",
         translation_key="red_ox",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
+        icon=MDI_POOL,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
