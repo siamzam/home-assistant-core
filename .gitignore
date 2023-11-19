@@ -1,5 +1,5 @@
 /config
-!config/www/quotable
+!config/www
 config2/*
 
 tests/testing_config/deps
