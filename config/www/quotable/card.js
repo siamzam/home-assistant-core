@@ -81,26 +81,6 @@ class QuotableCard extends HTMLElement {
   }
 }
 
-class QuotableCardEditor extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
-
-  setConfig(config) {
-    this._config = config;
-    this.render();
-  }
-
-  render() {
-    this.shadowRoot.innerHTML = `
-    Multiselects and slider here
-    `;
-  }
-}
-
-customElements.define("quotable-card-editor", QuotableCardEditor);
-
 customElements.define("quotable-card", QuotableCard);
 
 //Add card to card picker in UI
