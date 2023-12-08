@@ -1,0 +1,22 @@
+{
+  "name": "quotable_card",
+  "version": "1.0.0",
+  "description": "A custom card for the quotable integration",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "custom card",
+    "home assistant"
+  ],
+  "devDependencies": {
+    "jest": "^27.4.0"
+  },
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "jest-environment-jsdom"
+  }
+}

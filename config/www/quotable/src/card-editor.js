@@ -302,8 +302,9 @@ class QuotableCardEditor extends HTMLElement {
       };
 
       const searchResult = await this._hass.callWS(searchMessage);
-      this._authors = searchResult.result.success
-        ? searchResult.result.data
+
+      this._authors = searchResult.response.success
+        ? searchResult.response.data
         : [];
 
       if (this._authors.length >= 0) {
@@ -381,3 +382,7 @@ class QuotableCardEditor extends HTMLElement {
 }
 
 customElements.define("quotable-card-editor", QuotableCardEditor);
+
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+  module.exports = { QuotableCardEditor };
+}
