@@ -155,9 +155,9 @@ class QuotableCard extends HTMLElement {
     this._textColor = this._attributes.styles.text_color;
 
     //Update background, button and text colors
-    this.querySelector(".overlay").style.color = textColor;
-    this.querySelector(".buttons").style.color = textColor;
-    this.querySelector(".background-div").style.background = bgColor;
+    this.querySelector(".overlay").style.color = this._textColor;
+    this.querySelector(".buttons").style.color = this._textColor;
+    this.querySelector(".background-div").style.background = this._bgColor;
   }
 
   getCardSize() {
@@ -211,6 +211,7 @@ class QuotableCard extends HTMLElement {
     this.querySelector(".background-div").style.background = this._bgColor;
   }
 }
+
 customElements.define("quotable-card", QuotableCard);
 
 //Add card to card picker with a preview
@@ -221,3 +222,7 @@ window.customCards.push({
   preview: true,
   description: "Quotable",
 });
+
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+  module.exports = { QuotableCard };
+}
