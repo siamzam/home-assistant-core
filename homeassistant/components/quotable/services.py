@@ -172,6 +172,8 @@ async def _search_authors_service(
                 ]
                 return _success_response(authors)
 
+            return _success_response([])
+
     except aiohttp.ClientError as err:
         _LOGGER.error(
             "An error occurred while searching authors from the Quotable API. Details: %s",

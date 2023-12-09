@@ -2,10 +2,11 @@ class QuotableCardEditor extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._tags = [];
     this._authors = [];
-    this._selectedTags = [];
+    this._initial_authors = [];
     this._selectedAuthors = [];
+    this._tags = [];
+    this._selectedTags = [];
     this._intervalValue = 300;
     this._bgColor = "";
     this._textColor = "";
@@ -51,11 +52,13 @@ class QuotableCardEditor extends HTMLElement {
         service_data: serviceData,
       };
 
-      // Call quotable service to fetch all authors
+      // Call quotable service to fetch an initial list of authors
       const authorsResult = await this._hass.callWS(authorMessage);
       this._authors = authorsResult.response.success
         ? authorsResult.response.data
         : [];
+
+      this._initial_authors = this._authors;
 
       // Call quotable service to fetch all tags
       const tagsResult = await this._hass.callWS(tagMessage);
@@ -75,105 +78,115 @@ class QuotableCardEditor extends HTMLElement {
   renderForm() {
     // Add the container to the shadow DOM
     this.shadowRoot.innerHTML = `
-
-        <style>
-    div {
-        margin: 20px;
+    <style>
+      #quotable-form {
+        padding: 20px;
       }
 
-    select[multiple] {
-      width: 100%;
-      height: 100px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 5px;
-      overflow-y: auto;
-    }
-    option {
-      padding: 5px;
-      cursor: pointer;
-    }
+      #quotable-form * {
+        box-sizing: border-box;
+      }
 
+      ul {
+        width: 100%;
+        height: 100px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 5px;
+        overflow-y: auto;
+        list-style-type: none
+        margin: 0;
+        padding: 0;
+      }
 
+      li {
+        padding: 5px;
+        cursor: pointer;
+        background-color: transparent;
+      }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 5px;
-      margin-bottom: 10px;
-    }
-
-    input[type="range"] {
-      width: 80%;
-      height: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      background-color: #fdd835;
-      outline: none;
-    }
-
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      background-color: #007BFF;
-      border: 1px solid #007BFF;
-      border-radius: 50%;
-      cursor: pointer;
-    }
+      li.selected {
+        background-color: #007BFF;
+      }
 
       input[type="text"] {
         width: 100%;
         padding: 5px;
         margin-bottom: 10px;
       }
-  </style>
 
-  <form id="form">
+      input[type="range"] {
+        width: 80%;
+        height: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fdd835;
+        outline: none;
+      }
 
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background-color: #007BFF;
+        border: 1px solid #007BFF;
+        border-radius: 50%;
+        cursor: pointer;
+      }
 
-  <div style="display: flex; align-items: center;">
-    <label for="backgroundColorPicker" style="margin-right: 10px;">Select Card Background Color:</label>
-    <input type="color" id="backgroundColorPicker" value=${
-      this._selectedBgColor
-    }>
-    <label for="TextColorPicker" style="margin-left: 20px; margin-right: 10px;">Select Quote Text Color:</label>
-    <input type="color" id="textColorPicker" value=${this._selectedTextColor}>
-  </div>
+      input[type="text"] {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+      }
+    </style>
 
-    <div>
-    <label for="authorSelect">Select Authors:</label>
-    <span id="selectedAuthorsLabel"></span>
-    <input type="text" id="authorInput" placeholder="Search here">
-    <select id="authorSelect" multiple>
-      ${this._authors
-        .map(
-          (author) =>
-            `<option data-name="${author.name}" data-slug="${author.slug}" value="${author.slug}">${author.name}</option>`
-        )
-        .join("")}
-    </select>
-  </div>
+    <form id="quotable-form">
+      <h3>Styles</h3>
+      <div style="display: flex; align-items: center;">
+        <label for="backgroundColorPicker" style="margin-right: 10px;">Select Card Background Color:</label>
+        <input type="color" id="backgroundColorPicker" value=${
+          this._selectedBgColor
+        }>
+        <label for="TextColorPicker" style="margin-left: 20px; margin-right: 10px;">Select Quote Text Color:</label>
+        <input type="color" id="textColorPicker" value=${
+          this._selectedTextColor
+        }>
+      </div>
 
-  <div>
-    <label for="tagSelect">Select Categories:</label>
-    <span id="selectedTagsLabel"></span>
-    <select id="tagSelect" multiple>
-    ${this._tags
-      .map(
-        (tag) =>
-          `<option data-name="${tag.name}" data-slug="${tag.slug}" value="${tag.slug}">${tag.name}</option>`
-      )
-      .join("")}
-  </select>
-  </div>
+      <div>
+        <h4 for="authorSelect">Authors</h4>
+        <input type="text" id="authorInput" placeholder="Type to search for authors">
+        <div id="selectedAuthors"></div>
+        <ul id="authorSelect">
+          ${this._authors
+            .map(
+              (author) =>
+                `<li data-name="${author.name}" data-slug="${author.slug}" value="${author.slug}">${author.name}</li>`
+            )
+            .join("")}
+        </ul>
+      </div>
 
-  <div>
-    <label for="slider">Select Update Interval(mins):</label>
-    <input type="range" id="slider" min="1" max="60" value="50">
-    <span id="updateIntervalLabel">50</span>
-  </div>
-  </form>
+      <div>
+        <h4>Tags</h4>
+        <div id="selectedTags"></div>
+        <ul id="tagSelect">
+        ${this._tags
+          .map(
+            (tag) =>
+              `<li data-name="${tag.name}" data-slug="${tag.slug}" value="${tag.slug}">${tag.name}</li>`
+          )
+          .join("")}
+        </ul>
+      </div>
+
+      <div>
+        <h4>Update Interval (mins)</h4>
+        <input type="range" id="slider" min="1" max="60" value="50">
+        <span id="updateIntervalLabel">50</span>
+      </div>
+    </form>
   `;
 
     // Add references to the input and multiselect elements
@@ -184,11 +197,8 @@ class QuotableCardEditor extends HTMLElement {
     const updateIntervalLabel = this.shadowRoot.getElementById(
       "updateIntervalLabel"
     );
-    const selectedAuthorsLabel = this.shadowRoot.getElementById(
-      "selectedAuthorsLabel"
-    );
-    const selectedTagsLabel =
-      this.shadowRoot.getElementById("selectedTagsLabel");
+    const selectedAuthors = this.shadowRoot.getElementById("selectedAuthors");
+    const selectedTags = this.shadowRoot.getElementById("selectedTags");
     const form = this.shadowRoot.getElementById("form");
     const bgColorPicker = this.shadowRoot.getElementById(
       "backgroundColorPicker"
@@ -202,69 +212,49 @@ class QuotableCardEditor extends HTMLElement {
 
     // Add click event listener to update selected author list
     authorSelect.addEventListener("click", (event) => {
-      const authorOption = event.target;
-
-      if (authorOption.tagName === "OPTION") {
-        // Toggle the background color of the selected option
-        authorOption.style.backgroundColor =
-          authorOption.style.backgroundColor === "#007BFF" ? "#fff" : "#007BFF";
-
-        // Toggle the text color of the selected option
-        authorOption.style.color =
-          authorOption.style.color === "#fff" ? "#007BFF" : "#fff";
-
-        // Add or remove the selected item from the lists
-        const authorIndex = this._selectedAuthors.findIndex(
-          (author) => author.slug == authorOption.dataset.slug
-        );
-
-        if (authorIndex >= 0) {
-          this._selectedAuthors.splice(authorIndex, 1);
-        } else {
-          this._selectedAuthors.push({
-            name: authorOption.dataset.name,
-            slug: authorOption.dataset.slug,
-          });
-        }
-
-        // Update the selected author list
-        selectedAuthorsLabel.textContent = this._selectedAuthors
-          .map((author) => author.name)
-          .join(", ");
+      const authorEl = event.target;
+      console.log(authorEl);
+      // Add or remove the selected item from the lists
+      const authorIndex = this._selectedAuthors.findIndex(
+        (author) => author.slug == authorEl.dataset.slug
+      );
+      if (authorIndex >= 0) {
+        this._selectedAuthors.splice(authorIndex, 1);
+        authorEl.classList.remove("selected");
+      } else {
+        this._selectedAuthors.push({
+          name: authorEl.dataset.name,
+          slug: authorEl.dataset.slug,
+        });
+        authorEl.classList.add("selected");
       }
+      // Update the selected author list
+      selectedAuthors.textContent = this._selectedAuthors
+        .map((author) => author.name)
+        .join(", ");
     });
 
     // Add click event listener to update selected tags list
     tagSelect.addEventListener("click", (event) => {
-      const tagOption = event.target;
-
-      if (tagOption.tagName === "OPTION") {
-        // Toggle the background color of the selected option
-        tagOption.style.backgroundColor =
-          tagOption.style.backgroundColor === "#007BFF" ? "#fff" : "#007BFF";
-
-        // Toggle the text color of the selected option
-        tagOption.style.color =
-          tagOption.style.color === "#fff" ? "#007BFF" : "#fff";
-
-        // Add or remove the selected item from the lists
-        const tagIndex = this._selectedTags.findIndex(
-          (tag) => tag.slug == tagOption.dataset.slug
-        );
-        if (tagIndex >= 0) {
-          this._selectedTags.splice(tagIndex, 1);
-        } else {
-          this._selectedTags.push({
-            name: tagOption.dataset.name,
-            slug: tagOption.dataset.slug,
-          });
-        }
-
-        // Update the selected tags input
-        selectedTagsLabel.textContent = this._selectedTags
-          .map((tag) => tag.name)
-          .join(", ");
+      const tagEl = event.target;
+      // Add or remove the selected item from the lists
+      const tagIndex = this._selectedTags.findIndex(
+        (tag) => tag.slug == tagEl.dataset.slug
+      );
+      if (tagIndex >= 0) {
+        this._selectedTags.splice(tagIndex, 1);
+        tagEl.classList.remove("selected");
+      } else {
+        this._selectedTags.push({
+          name: tagEl.dataset.name,
+          slug: tagEl.dataset.slug,
+        });
+        tagEl.classList.add("selected");
       }
+      // Update the selected tags input
+      selectedTags.textContent = this._selectedTags
+        .map((tag) => tag.name)
+        .join(", ");
     });
 
     // Add input event listener to  interval slider
@@ -300,25 +290,35 @@ class QuotableCardEditor extends HTMLElement {
         service_data: searchData,
       };
 
-      const searchResult = await this._hass.callWS(searchMessage);
+      if (query === "") {
+        this._authors = this._initial_authors;
+      } else {
+        const searchResult = await this._hass.callWS(searchMessage);
 
-      this._authors = searchResult.response.success
-        ? searchResult.response.data
-        : [];
+        this._authors = searchResult.response.success
+          ? searchResult.response.data
+          : [];
+      }
 
       if (this._authors.length >= 0) {
         const authorSelect = this.shadowRoot.getElementById("authorSelect");
         // Clear existing options
         authorSelect.innerHTML = "";
         // Add new options based on the author array
-        const option = this._authors
+        const childEls = this._authors
           .map(
             (author) =>
-              `<option data-name="${author.name}" data-slug="${author.slug}" value="${author.slug}">${author.name}</option>`
+              `<li class="${
+                this._selectedAuthors.some((a) => a.slug == author.slug)
+                  ? "selected"
+                  : ""
+              }" data-name="${author.name}" data-slug="${author.slug}" value="${
+                author.slug
+              }">${author.name}</li>`
           )
           .join("");
 
-        authorSelect.innerHTML = option;
+        authorSelect.innerHTML = childEls;
       }
     } catch (error) {
       return;
