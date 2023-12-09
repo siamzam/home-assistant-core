@@ -158,7 +158,6 @@ class QuotableCardEditor extends HTMLElement {
   <div>
     <label for="tagSelect">Select Categories:</label>
     <span id="selectedTagsLabel"></span>
-    <input type="text" id="tagInput" placeholder="Select from list">
     <select id="tagSelect" multiple>
     ${this._tags
       .map(
@@ -180,7 +179,6 @@ class QuotableCardEditor extends HTMLElement {
     // Add references to the input and multiselect elements
     const authorInput = this.shadowRoot.getElementById("authorInput");
     const authorSelect = this.shadowRoot.getElementById("authorSelect");
-    const tagInput = this.shadowRoot.getElementById("tagInput");
     const tagSelect = this.shadowRoot.getElementById("tagSelect");
     const updateIntervalSlider = this.shadowRoot.getElementById("slider");
     const updateIntervalLabel = this.shadowRoot.getElementById(
@@ -219,6 +217,7 @@ class QuotableCardEditor extends HTMLElement {
         const authorIndex = this._selectedAuthors.findIndex(
           (author) => author.slug == authorOption.dataset.slug
         );
+
         if (authorIndex >= 0) {
           this._selectedAuthors.splice(authorIndex, 1);
         } else {
@@ -312,12 +311,14 @@ class QuotableCardEditor extends HTMLElement {
         // Clear existing options
         authorSelect.innerHTML = "";
         // Add new options based on the author array
-        this._authors.forEach((author) => {
-          const option = document.createElement("option");
-          option.value = author.slug;
-          option.text = author.name;
-          authorSelect.add(option);
-        });
+        const option = this._authors
+          .map(
+            (author) =>
+              `<option data-name="${author.name}" data-slug="${author.slug}" value="${author.slug}">${author.name}</option>`
+          )
+          .join("");
+
+        authorSelect.innerHTML = option;
       }
     } catch (error) {
       return;
