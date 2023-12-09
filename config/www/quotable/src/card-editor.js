@@ -218,7 +218,6 @@ class QuotableCardEditor extends HTMLElement {
           (author) => author.slug == authorOption.dataset.slug
         );
 
-        console.log(authorIndex);
         if (authorIndex >= 0) {
           this._selectedAuthors.splice(authorIndex, 1);
         } else {
