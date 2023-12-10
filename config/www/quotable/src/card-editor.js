@@ -74,6 +74,31 @@ class QuotableCardEditor extends HTMLElement {
     this.renderForm();
   }
 
+  // Add or remove the selected item from the lists
+  addRemoveSelectedItem(_selectedItem, eventTarget, selectedItem, id) {
+    const index = _selectedItem.findIndex(
+      (item) => item.slug == eventTarget.dataset.slug
+    );
+    if (index >= 0) {
+     _selectedItem.splice(index, 1);
+      const els = id.getElementsByTagName("li");
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].dataset.slug == eventTarget.dataset.slug) {
+            els[i].classList.remove("selected");
+          }
+        }
+    } else {
+      _selectedItem.push({
+        name: eventTarget.dataset.name,
+        slug: eventTarget.dataset.slug,
+      });
+      eventTarget.classList.add("selected");
+    }
+    return (selectedItem.textContent = _selectedItem
+      .map((item) => item.name)
+      .join(", "));
+  }
+
   //Render the visual representation
   renderForm() {
     // Add the container to the shadow DOM
@@ -224,33 +249,8 @@ class QuotableCardEditor extends HTMLElement {
 
     const handleAuthorSelectClickEvent = (event) => {
       const authorEl = event.target;
-      // Add or remove the selected item from the lists
-      const authorIndex = this._selectedAuthors.findIndex(
-        (author) => author.slug == authorEl.dataset.slug
-      );
-      if (authorIndex >= 0) {
-        this._selectedAuthors.splice(authorIndex, 1);
-        const els = authorSelect.getElementsByTagName("li");
-        for (var i = 0; i < els.length; i++) {
-          if (els[i].dataset.slug == authorEl.dataset.slug) {
-            els[i].classList.remove("selected");
-          }
-        }
-      } else {
-        this._selectedAuthors.push({
-          name: authorEl.dataset.name,
-          slug: authorEl.dataset.slug,
-        });
-        authorEl.classList.add("selected");
-      }
-
-      // Update the selected author list
-      selectedAuthors.innerHTML = this._selectedAuthors
-        .map(
-          (author) => `<span data-slug="${author.slug}">${author.name}</span>`
-        )
-        .join("");
-    };
+      addRemoveSelectedItem(this._selectedAuthors, authorEl, selectedAuthors, authorSelect);
+    });
 
     // Add click event listener to update selected author list
     authorSelect.addEventListener("click", handleAuthorSelectClickEvent);
@@ -258,35 +258,9 @@ class QuotableCardEditor extends HTMLElement {
 
     const handleTagSelectClickEvent = (event) => {
       const tagEl = event.target;
-      // Add or remove the selected item from the lists
-      const tagIndex = this._selectedTags.findIndex(
-        (tag) => tag.slug == tagEl.dataset.slug
-      );
-      if (tagIndex >= 0) {
-        this._selectedTags.splice(tagIndex, 1);
-        const els = tagSelect.getElementsByTagName("li");
-        for (var i = 0; i < els.length; i++) {
-          if (els[i].dataset.slug == tagEl.dataset.slug) {
-            els[i].classList.remove("selected");
-          }
-        }
-      } else {
-        this._selectedTags.push({
-          name: tagEl.dataset.name,
-          slug: tagEl.dataset.slug,
-        });
-        tagEl.classList.add("selected");
-      }
+      addRemoveSelectedItem(this._selectedTags, tagEl, selectedTags, tagSelect);
+    });
 
-      // Update the selected tag list
-      selectedTags.innerHTML = this._selectedTags
-        .map((tag) => `<span data-slug="${tag.slug}">${tag.name}</span>`)
-        .join("");
-    };
-
-    // Add click event listener to update selected tags list
-    tagSelect.addEventListener("click", handleTagSelectClickEvent);
-    selectedTags.addEventListener("click", handleTagSelectClickEvent);
 
     // Add input event listener to  interval slider
     updateIntervalSlider.addEventListener("input", () => {
