@@ -199,7 +199,7 @@ class QuotableCardEditor extends HTMLElement {
     );
     const selectedAuthors = this.shadowRoot.getElementById("selectedAuthors");
     const selectedTags = this.shadowRoot.getElementById("selectedTags");
-    const form = this.shadowRoot.getElementById("form");
+    const form = this.shadowRoot.getElementById("quotable-form");
     const bgColorPicker = this.shadowRoot.getElementById(
       "backgroundColorPicker"
     );
@@ -213,7 +213,6 @@ class QuotableCardEditor extends HTMLElement {
     // Add click event listener to update selected author list
     authorSelect.addEventListener("click", (event) => {
       const authorEl = event.target;
-      console.log(authorEl);
       // Add or remove the selected item from the lists
       const authorIndex = this._selectedAuthors.findIndex(
         (author) => author.slug == authorEl.dataset.slug
