@@ -17,6 +17,7 @@
     "test": "jest --coverage"
   },
   "jest": {
-    "testEnvironment": "jest-environment-jsdom"
+    "testEnvironment": "jest-environment-jsdom",
+    "verbose": true
   }
 }
