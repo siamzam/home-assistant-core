@@ -1,4 +1,5 @@
 # LOVELACE CARD FOR QUOTABLE INTEGRATION
+***
 
 # Purpose
 Quotable, a free and open-source home assistant integration, shares inspirational quotes to offer a positive start to people's days. 
@@ -6,21 +7,27 @@ Quotable, a free and open-source home assistant integration, shares inspirationa
 * The goal is to motivate daily tasks and enhance overall well-being. By beginning the day with encouraging quotes, it aids in maintaining a positive and focused mindset, leading to improved productivity and making daily challenges feel more manageable.
 * Quotable's user-friendly design ensures that everyone can easily access and enjoy these motivational quotes, turning regular days into more pleasant and satisfying experiences.
 
+***
+
 # Features:
 * Select quotes from a particular author
 * Select quotes from a particular category/tag
 * Select quote refresh rate
 * Custom card and text colors 
 
+***
 
 
 # Prerequisites
 QUOTABLE INTEGRATION ( Link here?)
 
+***
+
 # Setup
 How will the users be able to upload the files?
 How the users will get their file into their system?
 
+***
 
 # Usage
 1. Go to edit lovelace dashboard
