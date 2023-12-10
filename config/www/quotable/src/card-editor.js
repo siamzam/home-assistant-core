@@ -74,6 +74,26 @@ class QuotableCardEditor extends HTMLElement {
     this.renderForm();
   }
 
+  // Add or remove the selected item from the lists
+  addRemoveSelectedItem(_selectedItem, eventTarget, selectedItem) {
+    const index = _selectedItem.findIndex(
+      (item) => item.slug == eventTarget.dataset.slug
+    );
+    if (index >= 0) {
+      _selectedItem.splice(index, 1);
+      eventTarget.classList.remove("selected");
+    } else {
+      _selectedItem.push({
+        name: eventTarget.dataset.name,
+        slug: eventTarget.dataset.slug,
+      });
+      eventTarget.classList.add("selected");
+    }
+    return (selectedItem.textContent = _selectedItem
+      .map((item) => item.name)
+      .join(", "));
+  }
+
   //Render the visual representation
   renderForm() {
     // Add the container to the shadow DOM
@@ -213,47 +233,13 @@ class QuotableCardEditor extends HTMLElement {
     // Add click event listener to update selected author list
     authorSelect.addEventListener("click", (event) => {
       const authorEl = event.target;
-      // Add or remove the selected item from the lists
-      const authorIndex = this._selectedAuthors.findIndex(
-        (author) => author.slug == authorEl.dataset.slug
-      );
-      if (authorIndex >= 0) {
-        this._selectedAuthors.splice(authorIndex, 1);
-        authorEl.classList.remove("selected");
-      } else {
-        this._selectedAuthors.push({
-          name: authorEl.dataset.name,
-          slug: authorEl.dataset.slug,
-        });
-        authorEl.classList.add("selected");
-      }
-      // Update the selected author list
-      selectedAuthors.textContent = this._selectedAuthors
-        .map((author) => author.name)
-        .join(", ");
+      addRemoveSelectedItem(this._selectedAuthors, authorEl, selectedAuthors);
     });
 
     // Add click event listener to update selected tags list
     tagSelect.addEventListener("click", (event) => {
       const tagEl = event.target;
-      // Add or remove the selected item from the lists
-      const tagIndex = this._selectedTags.findIndex(
-        (tag) => tag.slug == tagEl.dataset.slug
-      );
-      if (tagIndex >= 0) {
-        this._selectedTags.splice(tagIndex, 1);
-        tagEl.classList.remove("selected");
-      } else {
-        this._selectedTags.push({
-          name: tagEl.dataset.name,
-          slug: tagEl.dataset.slug,
-        });
-        tagEl.classList.add("selected");
-      }
-      // Update the selected tags input
-      selectedTags.textContent = this._selectedTags
-        .map((tag) => tag.name)
-        .join(", ");
+      addRemoveSelectedItem(this._selectedTags, tagEl, selectedTags);
     });
 
     // Add input event listener to  interval slider
