@@ -101,4 +101,10 @@ describe("QuotableCard", () => {
       expectedAuthor
     );
   });
+
+  test("refreshQuote fetches a new quote", () => {
+    quotableCard.fetchNewQuote = jest.fn();
+    quotableCard.refreshQuote();
+    expect(quotableCard.fetchNewQuote).toHaveBeenCalled();
+  });
 });
