@@ -76,7 +76,7 @@ After a successfully installing [**HACS**](https://hacs.xyz) , follow the steps 
      <img src="imgs/4.png" alt="Customize card" width="40%"/>
    </p>
 
-5. Save your card configuration to add card to lovelace dashboard
+5. Save your card configuration to add card to lovelace dashboard.
    <p align="left">
      <img src="imgs/5.png" alt="Save configuration" width="40%"/>
    </p>
