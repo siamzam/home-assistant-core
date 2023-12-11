@@ -80,31 +80,6 @@ class QuotableCardEditor extends HTMLElement {
     this.renderForm();
   }
 
-  // Handles addition and removal of the selected item from the lists
-  addRemoveSelectedItem(_selectedItem, eventTarget, selectedItem, id) {
-    const index = _selectedItem.findIndex(
-      (item) => item.slug == eventTarget.dataset.slug
-    );
-    if (index >= 0) {
-      _selectedItem.splice(index, 1);
-      const els = id.getElementsByTagName("li");
-      for (var i = 0; i < els.length; i++) {
-        if (els[i].dataset.slug == eventTarget.dataset.slug) {
-          els[i].classList.remove("selected");
-        }
-      }
-    } else {
-      _selectedItem.push({
-        name: eventTarget.dataset.name,
-        slug: eventTarget.dataset.slug,
-      });
-      eventTarget.classList.add("selected");
-    }
-    return (selectedItem.textContent = _selectedItem
-      .map((item) => item.name)
-      .join(", "));
-  }
-
   // Render the visual representation
   renderForm() {
     // Add the container to the shadow DOM
@@ -294,6 +269,36 @@ class QuotableCardEditor extends HTMLElement {
 
     // Event listeners for updating config whiles user makes selections
     form.addEventListener("focusout", this.updateConfiguration.bind(this));
+  }
+
+  // Handles addition and removal of the selected item from the lists
+  addRemoveSelectedItem(_selectedItem, eventTarget, selectedItem, id) {
+    const index = _selectedItem.findIndex(
+      (item) => item.slug == eventTarget.dataset.slug
+    );
+    if (index >= 0) {
+      _selectedItem.splice(index, 1);
+      const els = id.getElementsByTagName("li");
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].dataset.slug == eventTarget.dataset.slug) {
+          els[i].classList.remove("selected");
+        }
+      }
+    } else {
+      _selectedItem.push({
+        name: eventTarget.dataset.name,
+        slug: eventTarget.dataset.slug,
+      });
+      eventTarget.classList.add("selected");
+    }
+
+    selectedItem.textContent = _selectedItem
+      .map((item) => item.name)
+      .join(", ");
+
+    this.updateConfiguration();
+
+    return selectedItem.textContent;
   }
 
   // Search for a particular author
