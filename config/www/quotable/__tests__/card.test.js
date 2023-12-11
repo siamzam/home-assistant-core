@@ -67,4 +67,22 @@ describe("QuotableCard", () => {
     quotableCard.hass = null;
     expect(quotableCard.updateQuoteAndAuthor).not.toHaveBeenCalled();
   });
+
+  test("test showPreviousQuote() ", () => {
+    const initialIndex = quotableCard.quoteIndex;
+    const expectedIndex =
+      (initialIndex - 1 + quotableCard.quotes.length) %
+      quotableCard.quotes.length;
+    const expectedQuote = quotableCard.quotes[expectedIndex].content;
+    const expectedAuthor = quotableCard.quotes[expectedIndex].author;
+
+    quotableCard.updateOverlay = jest.fn();
+    quotableCard.showPreviousQuote();
+
+    expect(quotableCard.quoteIndex).toBe(expectedIndex);
+    expect(quotableCard.updateOverlay).toHaveBeenCalledWith(
+      expectedQuote,
+      expectedAuthor
+    );
+  });
 });
