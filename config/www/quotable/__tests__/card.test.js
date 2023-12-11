@@ -107,4 +107,9 @@ describe("QuotableCard", () => {
     quotableCard.refreshQuote();
     expect(quotableCard.fetchNewQuote).toHaveBeenCalled();
   });
+
+  test("getStubConfig returns quotable config", () => {
+    const config = QuotableCard.getStubConfig();
+    expect(config).toEqual({ entity: "quotable.quotable" });
+  });
 });
