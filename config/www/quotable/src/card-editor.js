@@ -275,7 +275,7 @@ class QuotableCardEditor extends HTMLElement {
     authorSelect.addEventListener("click", handleAuthorSelectClickEvent);
 
     // Event listener for tag select
-    tagSelect.addEventListener("click", handleAuthorSelectClickEvent);
+    tagSelect.addEventListener("click", handleTagSelectClickEvent);
 
     // Event listener for interval slider
     updateIntervalSlider.addEventListener("input", () => {
