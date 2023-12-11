@@ -14,6 +14,7 @@ class QuotableCard extends HTMLElement {
     this._textColor = "";
   }
 
+  // Initialize hass instance
   set hass(hass) {
     this._hass = hass;
 
@@ -22,6 +23,7 @@ class QuotableCard extends HTMLElement {
     }
   }
 
+  // Initialize config
   setConfig(config) {
     this._config = config;
   }
@@ -31,7 +33,7 @@ class QuotableCard extends HTMLElement {
     if (this.updateInProgress) {
       return;
     }
-
+    // Flag to prevent a double update
     this.updateInProgress = true;
 
     try {
@@ -59,13 +61,13 @@ class QuotableCard extends HTMLElement {
     }
   }
 
+  // Call service to fetch new quote if quotes empty
   async fetchNewQuote() {
     try {
       const serviceData = {
         entity_id: this._config.entity,
       };
 
-      // Call quotable service to fetch a new quote
       const response = await this._hass.callService(
         "quotable",
         "fetch_a_quote",
@@ -75,7 +77,7 @@ class QuotableCard extends HTMLElement {
       this.render(response.content, response.author);
     } catch (error) {}
   }
-  //Uodate card content
+  // Update card content
   render(quote = this.DEFAULT_QUOTE, author = this.DEFAULT_AUTHOR) {
     if (this.renderCalled) {
       this.updateOverlay(quote, author);
@@ -138,23 +140,23 @@ class QuotableCard extends HTMLElement {
     </ha-card>
   `;
 
-    //Add event listeners for buttons
     this.prevButton = this.querySelector(".previous");
     this.nextButton = this.querySelector(".next");
     this.refreshButton = this.querySelector(".refresh");
 
+    // Event listeners for buttons
     this.prevButton.addEventListener("click", () => this.showPreviousQuote());
     this.nextButton.addEventListener("click", () => this.showNextQuote());
     this.refreshButton.addEventListener("click", () => this.refreshQuote());
 
-    //renderCalled flag to prevent double render
+    // renderCalled flag to prevent double render
     this.renderCalled = true;
 
-    //Fetch colors from quotable states
+    // Fetch colors from quotable states
     this._bgColor = this._attributes.styles.bg_color;
     this._textColor = this._attributes.styles.text_color;
 
-    //Update background, button and text colors
+    // Update background, button and text colors
     this.querySelector(".overlay").style.color = this._textColor;
     this.querySelector(".buttons").style.color = this._textColor;
     this.querySelector(".background-div").style.background = this._bgColor;
@@ -167,7 +169,7 @@ class QuotableCard extends HTMLElement {
   static getStubConfig() {
     return { entity: "quotable.quotable" };
   }
-
+  // Add card editor custom element
   static getConfigElement() {
     return document.createElement("quotable-card-editor");
   }
@@ -178,7 +180,7 @@ class QuotableCard extends HTMLElement {
     const quote = this.quotes[this.quoteIndex].content;
     const author = this.quotes[this.quoteIndex].author;
 
-    //Update quote on card
+    // Update quote on card
     this.updateOverlay(quote, author);
   }
 
@@ -187,7 +189,7 @@ class QuotableCard extends HTMLElement {
     const quote = this.quotes[this.quoteIndex].content;
     const author = this.quotes[this.quoteIndex].author;
 
-    //Update quote on card
+    // Update quote on card
     this.updateOverlay(quote, author);
   }
 
@@ -202,7 +204,7 @@ class QuotableCard extends HTMLElement {
     quoteElement.textContent = quote;
     authorElement.textContent = `- ${author}`;
 
-    //Fetch colors from quotable states
+    // Fetch colors from quotable states
     this._bgColor = this._attributes.styles.bg_color;
     this._textColor = this._attributes.styles.text_color;
 
@@ -214,7 +216,7 @@ class QuotableCard extends HTMLElement {
 
 customElements.define("quotable-card", QuotableCard);
 
-//Add card to card picker with a preview
+// Add card to card picker with a preview
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "quotable-card",
@@ -222,7 +224,7 @@ window.customCards.push({
   preview: true,
   description: "Quotable",
 });
-
+// Export quotable for tests
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
   module.exports = { QuotableCard };
 }
