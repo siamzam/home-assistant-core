@@ -68,7 +68,7 @@ describe("QuotableCard", () => {
     expect(quotableCard.updateQuoteAndAuthor).not.toHaveBeenCalled();
   });
 
-  test("test showPreviousQuote() ", () => {
+  test("test showPreviousQuote function ", () => {
     const initialIndex = quotableCard.quoteIndex;
     const expectedIndex =
       (initialIndex - 1 + quotableCard.quotes.length) %
@@ -78,6 +78,22 @@ describe("QuotableCard", () => {
 
     quotableCard.updateOverlay = jest.fn();
     quotableCard.showPreviousQuote();
+
+    expect(quotableCard.quoteIndex).toBe(expectedIndex);
+    expect(quotableCard.updateOverlay).toHaveBeenCalledWith(
+      expectedQuote,
+      expectedAuthor
+    );
+  });
+
+  test("test showNextQuote function", () => {
+    const initialIndex = quotableCard.quoteIndex;
+    const expectedIndex = (initialIndex + 1) % quotableCard.quotes.length;
+    const expectedQuote = quotableCard.quotes[expectedIndex].content;
+    const expectedAuthor = quotableCard.quotes[expectedIndex].author;
+
+    quotableCard.updateOverlay = jest.fn();
+    quotableCard.showNextQuote();
 
     expect(quotableCard.quoteIndex).toBe(expectedIndex);
     expect(quotableCard.updateOverlay).toHaveBeenCalledWith(
