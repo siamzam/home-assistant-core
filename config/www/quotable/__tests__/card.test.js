@@ -55,4 +55,16 @@ describe("QuotableCard", () => {
 
     expect(quotableCard.fetchNewQuote).toHaveBeenCalled();
   });
+
+  test("Call updateQuoteAndAuthor() is called if hass is set", () => {
+    quotableCard.updateQuoteAndAuthor = jest.fn();
+    quotableCard.hass = { states: {} };
+    expect(quotableCard.updateQuoteAndAuthor).toHaveBeenCalled();
+  });
+
+  test("Don't call updateQuoteAndAuthor() if hass not set", () => {
+    quotableCard.updateQuoteAndAuthor = jest.fn();
+    quotableCard.hass = null;
+    expect(quotableCard.updateQuoteAndAuthor).not.toHaveBeenCalled();
+  });
 });
