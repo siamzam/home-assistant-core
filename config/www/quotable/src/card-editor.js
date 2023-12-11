@@ -12,14 +12,17 @@ class QuotableCardEditor extends HTMLElement {
     this._textColor = "";
   }
 
+  // Initialize hass instance
   set hass(hass) {
     this._hass = hass;
   }
 
+  // Initialize config
   setConfig(config) {
     this._config = config;
   }
 
+  // Load select options when editor connected to DOM
   async connectedCallback() {
     this.loadOptions();
   }
@@ -30,10 +33,12 @@ class QuotableCardEditor extends HTMLElement {
         return;
       }
 
-      //Data payload that is transmitted as part of the service call
+      // Data payload that is transmitted as part of the service call
       const serviceData = {
         entity_id: this._config.entity,
       };
+
+      // Message object used when calling quotable service
 
       const authorMessage = {
         domain: "quotable",
@@ -42,8 +47,6 @@ class QuotableCardEditor extends HTMLElement {
         return_response: true,
         service_data: serviceData,
       };
-
-      //Message object used when calling quotable service
       const tagMessage = {
         domain: "quotable",
         service: "fetch_all_tags",
@@ -67,14 +70,42 @@ class QuotableCardEditor extends HTMLElement {
       return;
     }
 
+    // Fetch existing card style from config
     this._selectedBgColor =
       this._hass.states[this._config.entity].attributes.styles.bg_color || "";
     this._selectedTextColor =
       this._hass.states[this._config.entity].attributes.styles.text_color || "";
+
+    // Finally show form content
     this.renderForm();
   }
 
-  //Render the visual representation
+  // Handles addition and removal of the selected item from the lists
+  addRemoveSelectedItem(_selectedItem, eventTarget, selectedItem, id) {
+    const index = _selectedItem.findIndex(
+      (item) => item.slug == eventTarget.dataset.slug
+    );
+    if (index >= 0) {
+      _selectedItem.splice(index, 1);
+      const els = id.getElementsByTagName("li");
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].dataset.slug == eventTarget.dataset.slug) {
+          els[i].classList.remove("selected");
+        }
+      }
+    } else {
+      _selectedItem.push({
+        name: eventTarget.dataset.name,
+        slug: eventTarget.dataset.slug,
+      });
+      eventTarget.classList.add("selected");
+    }
+    return (selectedItem.textContent = _selectedItem
+      .map((item) => item.name)
+      .join(", "));
+  }
+
+  // Render the visual representation
   renderForm() {
     // Add the container to the shadow DOM
     this.shadowRoot.innerHTML = `
@@ -107,6 +138,18 @@ class QuotableCardEditor extends HTMLElement {
 
       li.selected {
         background-color: #007BFF;
+      }
+
+      li:not(.selected):hover {
+        background-color: #eee;
+      }
+
+      div.selected span {
+        display: inline-block;
+        padding: 2px 8px;
+        margin-right: 5px;
+        background-color: #ccc;
+        cursor: pointer;
       }
 
       input[type="text"] {
@@ -157,7 +200,7 @@ class QuotableCardEditor extends HTMLElement {
       <div>
         <h4 for="authorSelect">Authors</h4>
         <input type="text" id="authorInput" placeholder="Type to search for authors">
-        <div id="selectedAuthors"></div>
+        <div class="selected" id="selectedAuthors"></div>
         <ul id="authorSelect">
           ${this._authors
             .map(
@@ -170,7 +213,7 @@ class QuotableCardEditor extends HTMLElement {
 
       <div>
         <h4>Tags</h4>
-        <div id="selectedTags"></div>
+        <div class="selected" id="selectedTags"></div>
         <ul id="tagSelect">
         ${this._tags
           .map(
@@ -205,64 +248,42 @@ class QuotableCardEditor extends HTMLElement {
     );
     const textColorPicker = this.shadowRoot.getElementById("textColorPicker");
 
-    // Add  event listener to search author
+    const handleAuthorSelectClickEvent = (event) => {
+      const authorEl = event.target;
+      this.addRemoveSelectedItem(
+        this._selectedAuthors,
+        authorEl,
+        selectedAuthors,
+        authorSelect
+      );
+    };
+    const handleTagSelectClickEvent = (event) => {
+      const tagEl = event.target;
+      this.addRemoveSelectedItem(
+        this._selectedTags,
+        tagEl,
+        selectedTags,
+        tagSelect
+      );
+    };
+
+    // Event listener for search author input (Listens as user types)
     authorInput.addEventListener("keyup", () => {
       this.searchAuthor(authorInput.value);
     });
+    // Event listener for search author select
+    authorSelect.addEventListener("click", handleAuthorSelectClickEvent);
 
-    // Add click event listener to update selected author list
-    authorSelect.addEventListener("click", (event) => {
-      const authorEl = event.target;
-      // Add or remove the selected item from the lists
-      const authorIndex = this._selectedAuthors.findIndex(
-        (author) => author.slug == authorEl.dataset.slug
-      );
-      if (authorIndex >= 0) {
-        this._selectedAuthors.splice(authorIndex, 1);
-        authorEl.classList.remove("selected");
-      } else {
-        this._selectedAuthors.push({
-          name: authorEl.dataset.name,
-          slug: authorEl.dataset.slug,
-        });
-        authorEl.classList.add("selected");
-      }
-      // Update the selected author list
-      selectedAuthors.textContent = this._selectedAuthors
-        .map((author) => author.name)
-        .join(", ");
-    });
+    // Event listener for tag select
+    tagSelect.addEventListener("click", handleTagSelectClickEvent);
 
-    // Add click event listener to update selected tags list
-    tagSelect.addEventListener("click", (event) => {
-      const tagEl = event.target;
-      // Add or remove the selected item from the lists
-      const tagIndex = this._selectedTags.findIndex(
-        (tag) => tag.slug == tagEl.dataset.slug
-      );
-      if (tagIndex >= 0) {
-        this._selectedTags.splice(tagIndex, 1);
-        tagEl.classList.remove("selected");
-      } else {
-        this._selectedTags.push({
-          name: tagEl.dataset.name,
-          slug: tagEl.dataset.slug,
-        });
-        tagEl.classList.add("selected");
-      }
-      // Update the selected tags input
-      selectedTags.textContent = this._selectedTags
-        .map((tag) => tag.name)
-        .join(", ");
-    });
-
-    // Add input event listener to  interval slider
+    // Event listener for interval slider
     updateIntervalSlider.addEventListener("input", () => {
       updateIntervalLabel.textContent = updateIntervalSlider.value;
       this.intervalValue = updateIntervalSlider.value;
     });
 
-    // Add event listeners for color pickers
+    // Event listeners for color pickers
     bgColorPicker.addEventListener("input", () => {
       this._selectedBgColor = bgColorPicker.value;
     });
@@ -271,9 +292,11 @@ class QuotableCardEditor extends HTMLElement {
       this._selectedTextColor = textColorPicker.value;
     });
 
+    // Event listeners for updating config whiles user makes selections
     form.addEventListener("focusout", this.updateConfiguration.bind(this));
   }
 
+  // Search for a particular author
   async searchAuthor(query) {
     try {
       const searchData = {
@@ -298,13 +321,11 @@ class QuotableCardEditor extends HTMLElement {
           ? searchResult.response.data
           : [];
       }
-
+      // Replace existing author options with response
       if (this._authors.length >= 0) {
         const authorSelect = this.shadowRoot.getElementById("authorSelect");
-        // Clear existing options
-        authorSelect.innerHTML = "";
-        // Add new options based on the author array
-        const childEls = this._authors
+
+        authorSelect.innerHTML = this._authors
           .map(
             (author) =>
               `<li class="${
@@ -316,14 +337,13 @@ class QuotableCardEditor extends HTMLElement {
               }">${author.name}</li>`
           )
           .join("");
-
-        authorSelect.innerHTML = childEls;
       }
     } catch (error) {
       return;
     }
   }
 
+  // Update config with form details
   async updateConfiguration() {
     try {
       const updateConfigData = {
@@ -345,10 +365,12 @@ class QuotableCardEditor extends HTMLElement {
         service_data: updateConfigData,
       };
 
+      // Hass service call to update config
       const responseUpdateConfig = await this._hass.callWS(updateConfigMessage);
 
       if (responseUpdateConfig) {
         const newConfig = this._config;
+        // Fire a config changed event
         const event = new CustomEvent("config-changed", {
           detail: { config: newConfig },
           bubbles: true,
@@ -362,12 +384,12 @@ class QuotableCardEditor extends HTMLElement {
     }
   }
 
+  // Update preview with new quote
   async fetchQuote() {
     const fetchData = {
       entity_id: this._config.entity,
     };
 
-    //Message object used when calling quotable service
     const fetchNew = {
       domain: "quotable",
       service: "fetch_a_quote",
@@ -376,7 +398,7 @@ class QuotableCardEditor extends HTMLElement {
       service_data: fetchData,
     };
 
-    // Call quotable service to fetch new quote
+    // Hass service call to update quote on card
     await this._hass.callWS(fetchNew);
   }
 }
