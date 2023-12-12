@@ -1,8 +1,3 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-
-
-
-
 # LOVELACE CARD FOR QUOTABLE INTEGRATION
 
  <p align="center">
@@ -30,31 +25,13 @@ Quotable, a free and open-source home assistant integration, shares inspirationa
 
 ## Prerequisites
 
-- Home Assistant Community Store (HACS) --> [**Installation guide**](https://hacs.xyz/docs/setup/download/):
-
-- Quotable Integration ( Link here)
+- Quotable Integration
 
 ---
 
-## Installation
-After a successfully installing [**HACS**](https://hacs.xyz) , follow the steps below to install the lovelace card.
 
-1. Go to your HACS dashboard
-   <p align="left">
-     <img src="imgs/6.png" alt="Hacs" width="50%"/>
-   </p>
 
-2. Click on three dots / option menu on the top right
-   <p align="left">
-     <img src="imgs/7.png" alt="Add custom" width="20%"/>
-   </p>
-
-3.
-
-4.
----
-
-## Configuration
+## Setup
 
 1. Go to edit lovelace dashboard
    <p align="left">
