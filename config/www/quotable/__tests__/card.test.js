@@ -112,4 +112,10 @@ describe("QuotableCard", () => {
     const config = QuotableCard.getStubConfig();
     expect(config).toEqual({ entity: "quotable.quotable" });
   });
+
+  test("getConfigElement returns card editor custom element", () => {
+    const element = QuotableCard.getConfigElement();
+    expect(element).toBeInstanceOf(HTMLElement);
+    expect(element.tagName.toLowerCase()).toBe("quotable-card-editor");
+  });
 });
