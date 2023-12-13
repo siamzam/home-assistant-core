@@ -7,7 +7,7 @@ class QuotableCardEditor extends HTMLElement {
     this._selectedAuthors = [];
     this._tags = [];
     this._selectedTags = [];
-    this._intervalValue = 300;
+    this._intervalValue = "";
     this._bgColor = "";
     this._textColor = "";
   }
@@ -27,10 +27,27 @@ class QuotableCardEditor extends HTMLElement {
     this.loadOptions();
   }
 
+  // Check if an author/tag is selected
+  isSelected(selectedList, selectedItem) {
+    return selectedList.some((item) => item.slug == selectedItem.slug);
+  }
+
   async loadOptions() {
     try {
       if (!this._config.entity) {
         return;
+      }
+
+      // Set config values from hass state initially
+      const initialState = this._hass.states[this._config.entity];
+      if (initialState) {
+        this._selectedAuthors = initialState.attributes.selected_authors;
+        this._selectedTags = initialState.attributes.selected_tags;
+        this._selectedBgColor = initialState.attributes.styles.bg_color;
+        this._selectedTextColor = initialState.attributes.styles.text_color;
+
+        const updateFrequency = initialState.attributes.update_frequency / 60;
+        this._intervalValue = updateFrequency.toString();
       }
 
       // Data payload that is transmitted as part of the service call
@@ -69,12 +86,6 @@ class QuotableCardEditor extends HTMLElement {
     } catch (error) {
       return;
     }
-
-    // Fetch existing card style from config
-    this._selectedBgColor =
-      this._hass.states[this._config.entity].attributes.styles.bg_color || "";
-    this._selectedTextColor =
-      this._hass.states[this._config.entity].attributes.styles.text_color || "";
 
     // Finally show form content
     this.renderForm();
@@ -175,12 +186,25 @@ class QuotableCardEditor extends HTMLElement {
       <div>
         <h4 for="authorSelect">Authors</h4>
         <input type="text" id="authorInput" placeholder="Type to search for authors">
-        <div class="selected" id="selectedAuthors"></div>
+        <div class="selected" id="selectedAuthors">
+          ${this._selectedAuthors
+            .map(
+              (author) =>
+                `<span data-name="${author.name}" data-slug="${author.slug}">${author.name}</span>`
+            )
+            .join("")}
+        </div>
         <ul id="authorSelect">
           ${this._authors
             .map(
               (author) =>
-                `<li data-name="${author.name}" data-slug="${author.slug}" value="${author.slug}">${author.name}</li>`
+                `<li class="${
+                  this.isSelected(this._selectedAuthors, author)
+                    ? "selected"
+                    : ""
+                }" data-name="${author.name}" data-slug="${author.slug}">${
+                  author.name
+                }</li>`
             )
             .join("")}
         </ul>
@@ -188,12 +212,23 @@ class QuotableCardEditor extends HTMLElement {
 
       <div>
         <h4>Tags</h4>
-        <div class="selected" id="selectedTags"></div>
+        <div class="selected" id="selectedTags">
+          ${this._selectedTags
+            .map(
+              (tag) =>
+                `<span data-name="${tag.name}" data-slug="${tag.slug}">${tag.name}</span>`
+            )
+            .join("")}
+        </div>
         <ul id="tagSelect">
         ${this._tags
           .map(
             (tag) =>
-              `<li data-name="${tag.name}" data-slug="${tag.slug}" value="${tag.slug}">${tag.name}</li>`
+              `<li class="${
+                this.isSelected(this._selectedTags, tag) ? "selected" : ""
+              }" data-name="${tag.name}" data-slug="${tag.slug}">${
+                tag.name
+              }</li>`
           )
           .join("")}
         </ul>
@@ -201,8 +236,10 @@ class QuotableCardEditor extends HTMLElement {
 
       <div>
         <h4>Update Interval (mins)</h4>
-        <input type="range" id="slider" min="1" max="60" value="50">
-        <span id="updateIntervalLabel">50</span>
+        <input type="range" id="slider" min="1" max="60" value="${
+          this._intervalValue
+        }">
+        <span id="updateIntervalLabel">${this._intervalValue}</span>
       </div>
     </form>
   `;
@@ -232,6 +269,7 @@ class QuotableCardEditor extends HTMLElement {
         authorSelect
       );
     };
+
     const handleTagSelectClickEvent = (event) => {
       const tagEl = event.target;
       this.addRemoveSelectedItem(
@@ -248,14 +286,16 @@ class QuotableCardEditor extends HTMLElement {
     });
     // Event listener for search author select
     authorSelect.addEventListener("click", handleAuthorSelectClickEvent);
+    selectedAuthors.addEventListener("click", handleAuthorSelectClickEvent);
 
     // Event listener for tag select
     tagSelect.addEventListener("click", handleTagSelectClickEvent);
+    selectedTags.addEventListener("click", handleTagSelectClickEvent);
 
     // Event listener for interval slider
-    updateIntervalSlider.addEventListener("input", () => {
-      updateIntervalLabel.textContent = updateIntervalSlider.value;
-      this.intervalValue = updateIntervalSlider.value;
+    updateIntervalSlider.addEventListener("input", (event) => {
+      updateIntervalLabel.textContent = event.target.value;
+      this._intervalValue = event.target.value;
     });
 
     // Event listeners for color pickers
@@ -272,33 +312,38 @@ class QuotableCardEditor extends HTMLElement {
   }
 
   // Handles addition and removal of the selected item from the lists
-  addRemoveSelectedItem(_selectedItem, eventTarget, selectedItem, id) {
-    const index = _selectedItem.findIndex(
-      (item) => item.slug == eventTarget.dataset.slug
+  addRemoveSelectedItem(_selectedItems, targetElement, selectedItems, id) {
+    if (targetElement.dataset.slug === undefined) {
+      return;
+    }
+
+    const index = _selectedItems.findIndex(
+      (item) => item.slug == targetElement.dataset.slug
     );
     if (index >= 0) {
-      _selectedItem.splice(index, 1);
+      _selectedItems.splice(index, 1);
       const els = id.getElementsByTagName("li");
       for (var i = 0; i < els.length; i++) {
-        if (els[i].dataset.slug == eventTarget.dataset.slug) {
+        if (els[i].dataset.slug == targetElement.dataset.slug) {
           els[i].classList.remove("selected");
         }
       }
     } else {
-      _selectedItem.push({
-        name: eventTarget.dataset.name,
-        slug: eventTarget.dataset.slug,
+      _selectedItems.push({
+        name: targetElement.dataset.name,
+        slug: targetElement.dataset.slug,
       });
-      eventTarget.classList.add("selected");
+      targetElement.classList.add("selected");
     }
 
-    selectedItem.textContent = _selectedItem
-      .map((item) => item.name)
-      .join(", ");
+    selectedItems.innerHTML = _selectedItems
+      .map(
+        (item) =>
+          `<span data-slug="${item.slug}" data-name="${item.name}">${item.name}</span>`
+      )
+      .join("");
 
     this.updateConfiguration();
-
-    return selectedItem.textContent;
   }
 
   // Search for a particular author
@@ -337,9 +382,9 @@ class QuotableCardEditor extends HTMLElement {
                 this._selectedAuthors.some((a) => a.slug == author.slug)
                   ? "selected"
                   : ""
-              }" data-name="${author.name}" data-slug="${author.slug}" value="${
-                author.slug
-              }">${author.name}</li>`
+              }" data-name="${author.name}" data-slug="${author.slug}">${
+                author.name
+              }</li>`
           )
           .join("");
       }
@@ -353,8 +398,8 @@ class QuotableCardEditor extends HTMLElement {
     try {
       const updateConfigData = {
         entity_id: this._config.entity,
-        selected_tags: this._selectedTags.map((tag) => tag.slug),
-        selected_authors: this._selectedAuthors.map((author) => author.slug),
+        selected_tags: this._selectedTags,
+        selected_authors: this._selectedAuthors,
         update_frequency: parseInt(this._intervalValue) * 60,
         styles: {
           bg_color: this._selectedBgColor,

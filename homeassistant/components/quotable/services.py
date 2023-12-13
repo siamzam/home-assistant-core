@@ -193,9 +193,12 @@ async def _fetch_a_quote_service(
     if quotable is None:
         return None
 
+    selected_tags = quotable.config.get(ATTR_SELECTED_TAGS, [])
+    selected_authors = quotable.config.get(ATTR_SELECTED_AUTHORS, [])
+
     params = {
-        "tags": "|".join(quotable.config.get(ATTR_SELECTED_TAGS, [])),
-        "author": "|".join(quotable.config.get(ATTR_SELECTED_AUTHORS, [])),
+        "tags": "|".join(tag[ATTR_SLUG] for tag in selected_tags),
+        "author": "|".join(author[ATTR_SLUG] for author in selected_authors),
     }
 
     try:
