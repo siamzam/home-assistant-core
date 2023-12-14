@@ -113,4 +113,33 @@ describe("QuotableCardEditor", () => {
     expect(quotableEditor._authors).toEqual(authorResult.response.data);
     expect(quotableEditor._tags).toEqual(tagsResult.response.data);
   });
+
+  test("Test SearchAuthor with query for results", async () => {
+    const mockCallWS = jest.spyOn(quotableEditor._hass, "callWS");
+
+    mockCallWS.mockImplementation((message) => {
+      if (message.service === "search_authors") {
+        return Promise.resolve({
+          response: {
+            success: true,
+            data: ["author1", "author2", "author3"],
+          },
+        });
+      }
+    });
+    const mockGetElementById = jest.fn();
+    quotableEditor.shadowRoot = { getElementById: mockGetElementById };
+    await quotableEditor.searchAuthor("query");
+    expect(mockCallWS).toHaveBeenCalledWith({
+      domain: "quotable",
+      service: "search_authors",
+      type: "call_service",
+      return_response: true,
+      service_data: {
+        entity_id: quotableEditor._config.entity,
+        query: "query",
+      },
+    });
+    expect(quotableEditor._authors).toEqual(["author1", "author2", "author3"]);
+  });
 });
