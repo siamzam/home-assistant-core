@@ -142,4 +142,34 @@ describe("QuotableCardEditor", () => {
     });
     expect(quotableEditor._authors).toEqual(["author1", "author2", "author3"]);
   });
+
+  test("fetchQuote calls service with correct parameters", async () => {
+    const mockCallWS = jest.spyOn(quotableEditor._hass, "callWS");
+
+    //Mock the service call
+    mockCallWS.mockImplementation((message) => {
+      if (message.service === "fetch_a_quote") {
+        return Promise.resolve({
+          response: {
+            success: true,
+            data: ["quote1", "quote2", "quote3"],
+          },
+        });
+      }
+    });
+
+    //Call the fetchquote function
+    await quotableEditor.fetchQuote();
+
+    //Check if right params were sent
+    expect(mockCallWS).toHaveBeenCalledWith({
+      domain: "quotable",
+      service: "fetch_a_quote",
+      type: "call_service",
+      return_response: true,
+      service_data: {
+        entity_id: quotableEditor._config.entity,
+      },
+    });
+  });
 });
