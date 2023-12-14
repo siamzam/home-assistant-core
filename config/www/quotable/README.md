@@ -1,4 +1,4 @@
-# LOVELACE CARD FOR QUOTABLE INTEGRATION
+# QUOTABLE INTEGRATION
 
  <p align="center">
      <img src="imgs/quotable.png" alt="Quotable" width="40%"/>
