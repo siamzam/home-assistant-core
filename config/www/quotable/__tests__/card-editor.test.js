@@ -3,12 +3,38 @@ const { QuotableCardEditor } = require("../src/card-editor");
 
 describe("QuotableCardEditor", () => {
   let quotableEditor;
+  let _selectedItems;
+  let targetElement;
+  let selectedItems;
+  let id;
 
   beforeAll(() => {
     quotableEditor = new QuotableCardEditor();
   });
 
-  beforeEach(() => {});
+  beforeEach(() => {
+    _selectedItems = [];
+    targetElement = {
+      dataset: {
+        slug: "test",
+        name: "test",
+      },
+      classList: {
+        add: jest.fn(),
+        remove: jest.fn(),
+      },
+    };
+    selectedItems = {
+      innerHTML: "",
+    };
+    id = {
+      getElementsByTagName: jest.fn(),
+    };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   test("QuotableCardEditor is defined", () => {
     expect(quotableEditor).toBeDefined();
@@ -171,5 +197,47 @@ describe("QuotableCardEditor", () => {
         entity_id: quotableEditor._config.entity,
       },
     });
+  });
+
+  test("removes item if it is in _selectedItems", () => {
+    const addRemoveSelectedItem = quotableEditor.addRemoveSelectedItem;
+
+    jest.mock(quotableEditor.addRemoveSelectedItem, () => ({
+      updateConfiguration: jest.fn(),
+      getElementsByTagName: jest.fn(),
+    }));
+    _selectedItems.push(targetElement.dataset);
+    id.getElementsByTagName.mockReturnValue([
+      {
+        dataset: targetElement.dataset,
+        classList: {
+          remove: jest.fn(),
+        },
+      },
+    ]);
+
+    addRemoveSelectedItem(_selectedItems, targetElement, selectedItems, id);
+
+    expect(_selectedItems.length).toBe(0);
+    expect(selectedItems.innerHTML).toBe("");
+    expect(id.getElementsByTagName).toHaveBeenCalledWith("li");
+    expect(targetElement.classList.remove).not.toHaveBeenCalled();
+  });
+
+  test("adds item if it is not in _selectedItems", () => {
+    const addRemoveSelectedItem = quotableEditor.addRemoveSelectedItem;
+
+    jest.mock(quotableEditor.addRemoveSelectedItem, () => ({
+      updateConfiguration: jest.fn(),
+      getElementsByTagName: jest.fn(),
+    }));
+    addRemoveSelectedItem(_selectedItems, targetElement, selectedItems, id);
+
+    expect(_selectedItems.length).toBe(1);
+    expect(_selectedItems[0]).toEqual(targetElement.dataset);
+    expect(selectedItems.innerHTML).toContain(
+      `<span data-slug="${targetElement.dataset.slug}" data-name="${targetElement.dataset.name}">${targetElement.dataset.name}</span>`
+    );
+    expect(targetElement.classList.add).toHaveBeenCalledWith("selected");
   });
 });
