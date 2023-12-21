@@ -3,12 +3,38 @@ const { QuotableCardEditor } = require("../src/card-editor");
 
 describe("QuotableCardEditor", () => {
   let quotableEditor;
+  let _selectedItems;
+  let targetElement;
+  let selectedItems;
+  let id;
 
   beforeAll(() => {
     quotableEditor = new QuotableCardEditor();
   });
 
-  beforeEach(() => {});
+  beforeEach(() => {
+    _selectedItems = [];
+    targetElement = {
+      dataset: {
+        slug: "test",
+        name: "test",
+      },
+      classList: {
+        add: jest.fn(),
+        remove: jest.fn(),
+      },
+    };
+    selectedItems = {
+      innerHTML: "",
+    };
+    id = {
+      getElementsByTagName: jest.fn(),
+    };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   test("QuotableCardEditor is defined", () => {
     expect(quotableEditor).toBeDefined();
@@ -171,5 +197,63 @@ describe("QuotableCardEditor", () => {
         entity_id: quotableEditor._config.entity,
       },
     });
+  });
+
+  test("addRemoveSelectedItem adds an item if it's not already in the array", () => {
+    const _selectedItems = [];
+    const targetElement = {
+      id: "1",
+      dataset: { name: "1", slug: "slug1" },
+      classList: { add: jest.fn() },
+    };
+    const selectedItems = [];
+
+    // Call the function
+    quotableEditor.addRemoveSelectedItem(
+      _selectedItems,
+      targetElement,
+      selectedItems,
+      targetElement.id
+    );
+
+    // Check that the item was added to the array
+    expect(_selectedItems).toContainEqual(targetElement.dataset);
+  });
+
+  test("addRemoveSelectedItem removes an item if it's already in the array", () => {
+    const targetElement = {
+      id: "1",
+      dataset: { name: "Funny", slug: "funny" },
+      classList: { add: jest.fn() },
+    };
+    const _selectedItems = [targetElement.dataset];
+
+    const selectedItems = [];
+
+    const tagSelect = document.createElement("ul");
+
+    // Create a  mock <li> element with dataset properties
+    const li = document.createElement("li");
+    li.classList.add("selected");
+    li.dataset.name = "Funny";
+    li.dataset.slug = "funny";
+
+    //return the mocked <li> element when id.getElementsByTagName is called
+    tagSelect.getElementsByTagName = jest.fn((tagName) => {
+      if (tagName === "li") {
+        return [li];
+      }
+    });
+
+    // Call the function
+    quotableEditor.addRemoveSelectedItem(
+      _selectedItems,
+      targetElement,
+      selectedItems,
+      tagSelect
+    );
+
+    // Check that the item with dataset.name "Funny" was removed from the array
+    expect(_selectedItems).not.toContainEqual(targetElement.dataset);
   });
 });
