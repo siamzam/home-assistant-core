@@ -1,35 +1,11 @@
-// QuotableCard.test.js
+//Tests for card editor
 const { QuotableCardEditor } = require("../src/card-editor");
 
 describe("QuotableCardEditor", () => {
   let quotableEditor;
-  let _selectedItems;
-  let targetElement;
-  let selectedItems;
-  let id;
 
   beforeAll(() => {
     quotableEditor = new QuotableCardEditor();
-  });
-
-  beforeEach(() => {
-    _selectedItems = [];
-    targetElement = {
-      dataset: {
-        slug: "test",
-        name: "test",
-      },
-      classList: {
-        add: jest.fn(),
-        remove: jest.fn(),
-      },
-    };
-    selectedItems = {
-      innerHTML: "",
-    };
-    id = {
-      getElementsByTagName: jest.fn(),
-    };
   });
 
   afterEach(() => {
@@ -206,8 +182,9 @@ describe("QuotableCardEditor", () => {
       dataset: { name: "1", slug: "slug1" },
       classList: { add: jest.fn() },
     };
-    const selectedItems = [];
-
+    const selectedItems = {
+      innerHTML: "",
+    };
     // Call the function
     quotableEditor.addRemoveSelectedItem(
       _selectedItems,
@@ -228,8 +205,9 @@ describe("QuotableCardEditor", () => {
     };
     const _selectedItems = [targetElement.dataset];
 
-    const selectedItems = [];
-
+    const selectedItems = {
+      innerHTML: "",
+    };
     const tagSelect = document.createElement("ul");
 
     // Create a  mock <li> element with dataset properties
@@ -255,5 +233,80 @@ describe("QuotableCardEditor", () => {
 
     // Check that the item with dataset.name "Funny" was removed from the array
     expect(_selectedItems).not.toContainEqual(targetElement.dataset);
+  });
+
+  test("updateConfiguration calls service with correct parameters", async () => {
+    const mockCallWS = jest.spyOn(quotableEditor._hass, "callWS");
+
+    // Mock the service call
+    mockCallWS.mockImplementation((message) => {
+      if (message.service === "update_configuration") {
+        return Promise.resolve({
+          response: {
+            success: true,
+          },
+        });
+      }
+    });
+
+    // Call the updateConfiguration function
+    await quotableEditor.updateConfiguration();
+
+    // Check if right params were sent
+    expect(mockCallWS).toHaveBeenCalledWith({
+      domain: "quotable",
+      service: "update_configuration",
+      type: "call_service",
+      return_response: false,
+      service_data: {
+        entity_id: quotableEditor._config.entity,
+        selected_tags: quotableEditor._selectedTags,
+        selected_authors: quotableEditor._selectedAuthors,
+        update_frequency: parseInt(quotableEditor._intervalValue) * 60,
+        styles: {
+          bg_color: quotableEditor._selectedBgColor,
+          text_color: quotableEditor._selectedTextColor,
+        },
+      },
+    });
+  });
+
+  test("renderForm updates the form correctly", () => {
+    // Create a QuotableCardEditor instance
+    const editor = new QuotableCardEditor();
+
+    // Set some initial state
+    editor._selectedAuthors = [{ name: "Author 1", slug: "author1" }];
+    editor._selectedTags = [{ name: "Tag 1", slug: "tag1" }];
+    editor._selectedBgColor = "#ffffff";
+    editor._selectedTextColor = "#000000";
+    editor._intervalValue = "10";
+
+    // Call renderForm
+    editor.renderForm();
+
+    // Check if the form has been updated correctly
+    const form = editor.shadowRoot.getElementById("quotable-form");
+    expect(form).toBeDefined();
+
+    const authorInput = editor.shadowRoot.getElementById("authorInput");
+    expect(authorInput.value).toBe("");
+
+    const authorSelect = editor.shadowRoot.getElementById("authorSelect");
+    expect(authorSelect).toBeDefined();
+
+    const tagSelect = editor.shadowRoot.getElementById("tagSelect");
+    expect(tagSelect).toBeDefined();
+
+    const bgColorPicker = editor.shadowRoot.getElementById(
+      "backgroundColorPicker"
+    );
+    expect(bgColorPicker.value).toBe("#ffffff");
+
+    const textColorPicker = editor.shadowRoot.getElementById("textColorPicker");
+    expect(textColorPicker.value).toBe("#000000");
+
+    const updateIntervalSlider = editor.shadowRoot.getElementById("slider");
+    expect(updateIntervalSlider.value).toBe("10");
   });
 });
