@@ -1,5 +1,5 @@
 // Tests for quotable card
-const { QuotableCard } = require("../src/card");
+const { QuotableCard } = require("../card");
 
 describe("QuotableCard", () => {
   let quotableCard;

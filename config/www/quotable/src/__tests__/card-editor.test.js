@@ -1,5 +1,5 @@
 //Tests for card editor
-const { QuotableCardEditor } = require("../src/card-editor");
+const { QuotableCardEditor } = require("../card-editor");
 
 describe("QuotableCardEditor", () => {
   let quotableEditor;
